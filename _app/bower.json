@@ -1,0 +1,13 @@
+{
+  "name": "Danone Numil",
+  "version": "1.0.0",
+  "authors": [
+	"Epigra"
+  ],
+  "main": "Gruntfile.js",
+  "license": "ISC",
+  "dependencies": {
+	"bootstrap": "3.3.4",
+	"components-font-awesome": "~4.3.0"
+  }
+}

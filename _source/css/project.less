@@ -1,0 +1,44 @@
+@import "bootstrap.less";
+@import "buttons.less";
+@import "font-awesome.less";
+@import "buttons.less";
+@import "variables.less";
+@import "carettamixin.less";
+@import "include.less";
+
+@cGreen: #0f6634;
+ul, li{list-style: none; padding: 0; margin: 0;}
+html{overflow: hidden;}
+body{font-family: 'Galette'; position: relative; }
+
+header{margin: 25px 0;
+	img{width: 100%;}
+	nav{margin-top: 2px;
+		ul{display: inline-block; text-align: center; width: 100%;
+			li{display: inline-block; text-align: center;
+				a{color: @cGreen; font-size: 24px; margin-right: 50px;}
+				&:last-child a{margin-right: 0;}
+				&:last-child{float: right;}
+			}
+		}
+	}
+}
+.menu{float: left; padding: 0;
+	h4{width: 100%; float: left; text-align: center; text-transform: uppercase; font-size: 24px; color: @cGreen;}
+	& > nav > ul{width: 100%; float: left;
+		& > li{width: 100%; float: left; margin-bottom: 5px; padding: 5px 0; border-bottom: 1px solid #525252;
+			& > a{width: 100%; cursor: pointer; padding-left: 5px; float: left; color: #525252; font-weight: 600; font-size: 16px;
+				&.has-ul{background: url(../images/arrow.png) right 5px center no-repeat;}
+				&.rPin{background: url(../images/rarrow.png) right 5px center no-repeat;}
+			}
+			& ul{display: none; padding-left: 40px; width: 100%; float: left; margin-top: 5px;
+				li{list-style: square; float: left; padding: 3px 0; width: 100%;
+					a{font-size: 16px; float: left; color: #525252;}
+					a:hover{text-decoration: underline;}
+				}
+				
+			}
+		}
+	}
+}
+.grid-area{height: 400px; background: @cGreen; color: #fff; font-size: 40px; text-align: center; padding-top: 150px;}
