@@ -13539,5 +13539,10 @@ return jQuery;
 
 	});
 
+	 function resizeGrid(newsize, grid) {
+            $('#dataGrid').css('width', newsize);
+            grid.resizeCanvas();
+    }
+
 	$("html").niceScroll();
 });

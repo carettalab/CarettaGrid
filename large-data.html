@@ -33,7 +33,7 @@
 					<li>
 						<a>Data Binding</a>
 						<ul>
-							<li><a href="">Large Database</a></li>
+							<li><a href="large-data.html">Large Database</a></li>
 							<li><a href="">Live Data</a></li>
 							<li><a href="">Query Builder Control</a></li>
 						</ul>
@@ -176,48 +176,128 @@
 		<div class="grid-area col-md-9">
 			<h4>Overview</h4>
 			<div id="myGrid" style="width:100%;height: 500px;float: left;"></div>
-			<h5>Performance Speed</h5>
-			<p><b>Lorem ipsum dolor sit</b> amet, consectetur adipisicing elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident.</p>
-			<h5>Performance Speed Test</h5>
-			<p>Nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, <b>voluptate sequi quaerat aperiam explicabo enim perspiciatis provident.</b> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident. Lorem ipsum dolor sit amet, consectetur adipisicin. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam  non g elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident.</p>
+			<h5>Search: </h5>
+			<p>Show tasks with % at least:
+				<div style="padding:2px;">
+			    	<div style="width:100px;display:inline-block;" id="pcSlider"></div>
+			    </div>
+			</p>
+			<p>This page demonstrates various techniques for optimizing DataView performance for large client-side datasets. This page displays an interactive grid with
+	      	<b>500'000</b> rows with real-time filtering.</p>
+	      	<h5>This is achieved by:</h5>
+	      	<p>Inlining filter function to cut down on the cost of function calls
+	      	Providing hints to indicate whether a filtering operation will result in narrowing or expanding scope or whether the scope is unchanged. Providing a range of rows for which onRowsChanged even should be fired.</p>
 		</div>
 	</div>
 	<link rel="stylesheet" href="assets/grid/css/slick.grid.css" type="text/css"/>
+	<link rel="stylesheet" type="text/css" href="assets/grid/css/examples.css">
   	<link rel="stylesheet" href="assets/grid/css/jquery-ui-1.8.16.custom.css" type="text/css"/>
 	<script src="assets/grid/js/jquery.event.drag-2.2.js"></script>
+	<script src="assets/grid/js/jquery-ui-1.8.16.custom.min.js"></script>
 	<script src="assets/grid/js/slick.core.js"></script>
+	<script src="assets/grid/js/slick.formatters.js"></script>
 	<script src="assets/grid/js/slick.grid.js"></script>
+	<script src="assets/grid/js/slick.dataview.js"></script>
+	<script src="assets/grid/js/slick.pager.js"></script>
+
 
 	<script>
+	  var dataView;
 	  var grid;
+	  var data = [];
 	  var columns = [
-	    {id: "title", name: "Title", field: "title"},
+	    {id: "sel", name: "#", field: "num", behavior: "select", cssClass: "cell-selection", width: 40, resizable: false, selectable: false },
+	    {id: "title", name: "Title", field: "title", width: 120, minWidth: 120, cssClass: "cell-title"},
 	    {id: "duration", name: "Duration", field: "duration"},
-	    {id: "%", name: "% Complete", field: "percentComplete"},
-	    {id: "start", name: "Start", field: "start"},
-	    {id: "finish", name: "Finish", field: "finish"},
-	    {id: "effort-driven", name: "Effort Driven", field: "effortDriven"}
+	    {id: "%", name: "% Complete", field: "percentComplete", width: 80, resizable: false, formatter: Slick.Formatters.PercentCompleteBar},
+	    {id: "start", name: "Start", field: "start", minWidth: 60},
+	    {id: "finish", name: "Finish", field: "finish", minWidth: 60},
+	    {id: "effort-driven", name: "Effort Driven", width: 80, minWidth: 20, maxWidth: 80, cssClass: "cell-effort-driven", field: "effortDriven", formatter: Slick.Formatters.Checkmark}
 	  ];
 
 	  var options = {
-	    enableCellNavigation: true,
-	    enableColumnReorder: false
+	    editable: false,
+	    enableAddRow: false,
+	    enableCellNavigation: true
 	  };
 
+	  var percentCompleteThreshold = 0;
+	  var prevPercentCompleteThreshold = 0;
+	  var h_runfilters = null;
+
+	  function myFilter(item, args) {
+	    return item["percentComplete"] >= args;
+	  }
+
+	  function DataItem(i) {
+	    this.num = i;
+	    this.id = "id_" + i;
+	    this.percentComplete = Math.round(Math.random() * 100);
+	    this.effortDriven = (i % 5 == 0);
+	    this.start = "01/01/2009";
+	    this.finish = "01/05/2009";
+	    this.title = "Task " + i;
+	    this.duration = "5 days";
+	  }
+
+
 	  $(function () {
-	    var data = [];
-	    for (var i = 0; i < 500; i++) {
-	      data[i] = {
-	        title: "Task " + i,
-	        duration: "5 days",
-	        percentComplete: Math.round(Math.random() * 100),
-	        start: "01/01/2009",
-	        finish: "01/05/2009",
-	        effortDriven: (i % 5 == 0)
-	      };
+	    // prepare the data
+	    for (var i = 0; i < 500000; i++) {
+	      data[i] = new DataItem(i);
 	    }
 
-	    grid = new Slick.Grid("#myGrid", data, columns, options);
+	    dataView = new Slick.Data.DataView({ inlineFilters: true });
+	    grid = new Slick.Grid("#myGrid", dataView, columns, options);
+	    var pager = new Slick.Controls.Pager(dataView, grid, $("#pager"));
+
+	    // wire up model events to drive the grid
+	    dataView.onRowCountChanged.subscribe(function (e, args) {
+	      grid.updateRowCount();
+	      grid.render();
+	    });
+
+	    dataView.onRowsChanged.subscribe(function (e, args) {
+	      grid.invalidateRows(args.rows);
+	      grid.render();
+	    });
+
+
+	    // wire up the slider to apply the filter to the model
+	    $("#pcSlider").slider({
+	      "range": "min",
+	      "slide": function (event, ui) {
+	        if (percentCompleteThreshold != ui.value) {
+	          window.clearTimeout(h_runfilters);
+	          h_runfilters = window.setTimeout(filterAndUpdate, 10);
+	          percentCompleteThreshold = ui.value;
+	        }
+	      }
+	    });
+
+	    function filterAndUpdate() {
+	      var isNarrowing = percentCompleteThreshold > prevPercentCompleteThreshold;
+	      var isExpanding = percentCompleteThreshold < prevPercentCompleteThreshold;
+	      var renderedRange = grid.getRenderedRange();
+
+	      dataView.setFilterArgs(percentCompleteThreshold);
+	      dataView.setRefreshHints({
+	        ignoreDiffsBefore: renderedRange.top,
+	        ignoreDiffsAfter: renderedRange.bottom + 1,
+	        isFilterNarrowing: isNarrowing,
+	        isFilterExpanding: isExpanding
+	      });
+	      dataView.refresh();
+
+	      prevPercentCompleteThreshold = percentCompleteThreshold;
+	    }
+
+	    // initialize the model after all the events have been hooked up
+	    dataView.beginUpdate();
+	    dataView.setItems(data);
+	    dataView.setFilter(myFilter);
+	    dataView.setFilterArgs(0);
+	    dataView.endUpdate();
 	  })
 	</script>
 </body>

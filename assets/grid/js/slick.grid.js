@@ -57,7 +57,7 @@ if (typeof Slick === "undefined") {
     var defaults = {
       explicitInitialization: false,
       rowHeight: 25,
-      defaultColumnWidth: 80,
+      defaultColumnWidth: 128.9,
       enableAddRow: false,
       leaveSpaceForNewRows: false,
       editable: false,

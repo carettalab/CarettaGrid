@@ -175,50 +175,153 @@
 		</div>
 		<div class="grid-area col-md-9">
 			<h4>Overview</h4>
-			<div id="myGrid" style="width:100%;height: 500px;float: left;"></div>
-			<h5>Performance Speed</h5>
-			<p><b>Lorem ipsum dolor sit</b> amet, consectetur adipisicing elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident.</p>
-			<h5>Performance Speed Test</h5>
-			<p>Nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, <b>voluptate sequi quaerat aperiam explicabo enim perspiciatis provident.</b> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident. Lorem ipsum dolor sit amet, consectetur adipisicin. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam  non g elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident.</p>
+			<div id="myGrid" style="width:100%;height:500px;"></div>
+			<h5>Demonstrates</h5>
+			<p>Virtual scrolling on both rows and columns. Select a range of cells with a mouse. Use Ctrl-C and Ctrl-V keyboard shortcuts to cut and paste cells. Use Esc to cancel a copy and paste operation. Edit the cell and select a cell range to paste the range</p>
 		</div>
 	</div>
+	<script src="assets/grid/js/firebugx.js"></script>
 	<link rel="stylesheet" href="assets/grid/css/slick.grid.css" type="text/css"/>
+	<link rel="stylesheet" type="text/css" href="assets/grid/css/examples.css">
   	<link rel="stylesheet" href="assets/grid/css/jquery-ui-1.8.16.custom.css" type="text/css"/>
 	<script src="assets/grid/js/jquery.event.drag-2.2.js"></script>
+	<script src="assets/grid/js/jquery-ui-1.8.16.custom.min.js"></script>
+
 	<script src="assets/grid/js/slick.core.js"></script>
+	<script src="assets/grid/js/slick.autotooltips.js"></script>
+	<script src="assets/grid/js/slick.cellrangedecorator.js"></script>
+	<script src="assets/grid/js/slick.cellrangeselector.js"></script>
+	<script src="assets/grid/js/slick.cellcopymanager.js"></script>
+	<script src="assets/grid/js/slick.cellselectionmodel.js"></script>
+	<script src="assets/grid/js/slick.editors.js"></script>
 	<script src="assets/grid/js/slick.grid.js"></script>
 
 	<script>
-	  var grid;
-	  var columns = [
-	    {id: "title", name: "Title", field: "title"},
-	    {id: "duration", name: "Duration", field: "duration"},
-	    {id: "%", name: "% Complete", field: "percentComplete"},
-	    {id: "start", name: "Start", field: "start"},
-	    {id: "finish", name: "Finish", field: "finish"},
-	    {id: "effort-driven", name: "Effort Driven", field: "effortDriven"}
-	  ];
+	var grid;
+	var data = [];
+	var options = {
+	editable: true,
+	enableAddRow: true,
+	enableCellNavigation: true,
+	asyncEditorLoading: false,
+	autoEdit: false
+	};
 
-	  var options = {
-	    enableCellNavigation: true,
-	    enableColumnReorder: false
-	  };
+	var columns = [
+	{
+	  id: "selector",
+	  name: "",
+	  field: "num",
+	  width: 30
+	}
+	];
 
-	  $(function () {
-	    var data = [];
-	    for (var i = 0; i < 500; i++) {
-	      data[i] = {
-	        title: "Task " + i,
-	        duration: "5 days",
-	        percentComplete: Math.round(Math.random() * 100),
-	        start: "01/01/2009",
-	        finish: "01/05/2009",
-	        effortDriven: (i % 5 == 0)
-	      };
+	for (var i = 0; i < 100; i++) {
+	columns.push({
+	  id: i,
+	  name: String.fromCharCode("A".charCodeAt(0) + (i / 26) | 0) +
+	        String.fromCharCode("A".charCodeAt(0) + (i % 26)),
+	  field: i,
+	  width: 60,
+	  editor: FormulaEditor
+	});
+	}
+
+	/***
+	* A proof-of-concept cell editor with Excel-like range selection and insertion.
+	*/
+	function FormulaEditor(args) {
+	var _self = this;
+	var _editor = new Slick.Editors.Text(args);
+	var _selector;
+
+	$.extend(this, _editor);
+
+	function init() {
+	  // register a plugin to select a range and append it to the textbox
+	  // since events are fired in reverse order (most recently added are executed first),
+	  // this will override other plugins like moverows or selection model and will
+	  // not require the grid to not be in the edit mode
+	  _selector = new Slick.CellRangeSelector();
+	  _selector.onCellRangeSelected.subscribe(_self.handleCellRangeSelected);
+	  args.grid.registerPlugin(_selector);
+	}
+
+	this.destroy = function () {
+	  _selector.onCellRangeSelected.unsubscribe(_self.handleCellRangeSelected);
+	  grid.unregisterPlugin(_selector);
+	  _editor.destroy();
+	};
+
+	this.handleCellRangeSelected = function (e, args) {
+	  _editor.setValue(
+	      _editor.getValue() +
+	          grid.getColumns()[args.range.fromCell].name +
+	          args.range.fromRow +
+	          ":" +
+	          grid.getColumns()[args.range.toCell].name +
+	          args.range.toRow
+	  );
+	};
+
+
+	init();
+	}
+
+
+	$(function () {
+	for (var i = 0; i < 100; i++) {
+	  var d = (data[i] = {});
+	  d["num"] = i;
+	}
+
+	grid = new Slick.Grid("#myGrid", data, columns, options);
+
+	grid.setSelectionModel(new Slick.CellSelectionModel());
+	grid.registerPlugin(new Slick.AutoTooltips());
+
+	// set keyboard focus on the grid
+	grid.getCanvasNode().focus();
+
+	var copyManager = new Slick.CellCopyManager();
+	grid.registerPlugin(copyManager);
+
+	copyManager.onPasteCells.subscribe(function (e, args) {
+	  if (args.from.length !== 1 || args.to.length !== 1) {
+	    throw "This implementation only supports single range copy and paste operations";
+	  }
+
+	  var from = args.from[0];
+	  var to = args.to[0];
+	  var val;
+	  for (var i = 0; i <= from.toRow - from.fromRow; i++) {
+	    for (var j = 0; j <= from.toCell - from.fromCell; j++) {
+	      if (i <= to.toRow - to.fromRow && j <= to.toCell - to.fromCell) {
+	        val = data[from.fromRow + i][columns[from.fromCell + j].field];
+	        data[to.fromRow + i][columns[to.fromCell + j].field] = val;
+	        grid.invalidateRow(to.fromRow + i);
+	      }
 	    }
+	  }
+	  grid.render();
+	});
 
-	    grid = new Slick.Grid("#myGrid", data, columns, options);
-	  })
+	grid.onAddNewRow.subscribe(function (e, args) {
+	  var item = args.item;
+	  var column = args.column;
+	  grid.invalidateRow(data.length);
+	  data.push(item);
+	  grid.updateRowCount();
+	  grid.render();
+	});
+	})
 	</script>
+	<style>
+    .slick-cell-checkboxsel {
+      background: #f0f0f0;
+      border-right-color: silver;
+      border-right-style: solid;
+    }
+  </style>
 </body>
 </html>
