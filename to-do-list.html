@@ -184,151 +184,285 @@
 		<div class="grid-area col-md-9">
 			<h4>Overview</h4>
 			<div id="myGrid" style="width:100%;height:500px;"></div>
+			<h5>Search:</h5>
+			<p>Show tasks with % at least:
+				<div style="padding:2px;">
+			    	<div style="width:100px;display:inline-block;" id="pcSlider"></div>
+			    </div>
+			</p>
+			<p>And title including:<br>
+				<input type=text id="txtSearch" style="width:200px;">
+			</p>
 			<h5>Demonstrates</h5>
-			<p>Virtual scrolling on both rows and columns. Select a range of cells with a mouse. Use Ctrl-C and Ctrl-V keyboard shortcuts to cut and paste cells. Use Esc to cancel a copy and paste operation. Edit the cell and select a cell range to paste the range</p>
+			<p>With SlickGrid, you can still have rich, complex cells rendered against the actual DOM nodes while still preserving
+    		the speed and responsiveness. This is achieved through async background post-rendering. SlickGrid exposes a <u>asyncPostRender</u> property on a column which you can use to set your own function that will manipulate the cell DOM node directly. The event is fired one by one for all visible rows in the viewport on a timer so it doesn't impact the UI responsiveness. You should still make sure that post-processing one row doesn't take too long though. SlickGrid will figure out what and when needs to be updated for you.</p>
 		</div>
 	</div>
 	<script src="assets/grid/js/firebugx.js"></script>
 	<link rel="stylesheet" href="assets/grid/css/slick.grid.css" type="text/css"/>
 	<link rel="stylesheet" type="text/css" href="assets/grid/css/examples.css">
   	<link rel="stylesheet" href="assets/grid/css/jquery-ui-1.8.16.custom.css" type="text/css"/>
-	<script src="assets/grid/js/jquery.event.drag-2.2.js"></script>
+
 	<script src="assets/grid/js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script src="assets/grid/js/jquery.event.drag-2.2.js"></script>
+	<script src="assets/grid/js/jquery.event.drop-2.2.js"></script>
 
 	<script src="assets/grid/js/slick.core.js"></script>
-	<script src="assets/grid/js/slick.autotooltips.js"></script>
-	<script src="assets/grid/js/slick.cellrangedecorator.js"></script>
 	<script src="assets/grid/js/slick.cellrangeselector.js"></script>
-	<script src="assets/grid/js/slick.cellcopymanager.js"></script>
 	<script src="assets/grid/js/slick.cellselectionmodel.js"></script>
+	<script src="assets/grid/js/slick.rowselectionmodel.js"></script>
+	<script src="assets/grid/js/slick.rowmovemanager.js"></script>
+	<script src="assets/grid/js/slick.formatters.js"></script>
 	<script src="assets/grid/js/slick.editors.js"></script>
 	<script src="assets/grid/js/slick.grid.js"></script>
+
 
 	<script>
 	var grid;
 	var data = [];
-	var options = {
-	editable: true,
-	enableAddRow: true,
-	enableCellNavigation: true,
-	asyncEditorLoading: false,
-	autoEdit: false
-	};
-
 	var columns = [
-	{
-	  id: "selector",
-	  name: "",
-	  field: "num",
-	  width: 30
-	}
+	  {
+	    id: "#",
+	    name: "",
+	    width: 50,
+	    behavior: "selectAndMove",
+	    selectable: false,
+	    resizable: false,
+	    cssClass: "cell-reorder dnd"
+	  },
+	  {
+	    id: "name",
+	    name: "Name",
+	    field: "name",
+	    width: 250,
+	    cssClass: "cell-title",
+	    editor: Slick.Editors.Text,
+	    validator: requiredFieldValidator
+	  },
+	  {
+	    id: "complete",
+	    name: "Complete",
+	    width: 50,
+	    cssClass: "cell-effort-driven",
+	    field: "complete",
+	    cannotTriggerInsert: true,
+	    formatter: Slick.Formatters.Checkmark,
+	    editor: Slick.Editors.Checkbox
+	  }
 	];
 
-	for (var i = 0; i < 100; i++) {
-	columns.push({
-	  id: i,
-	  name: String.fromCharCode("A".charCodeAt(0) + (i / 26) | 0) +
-	        String.fromCharCode("A".charCodeAt(0) + (i % 26)),
-	  field: i,
-	  width: 60,
-	  editor: FormulaEditor
-	});
-	}
-
-	/***
-	* A proof-of-concept cell editor with Excel-like range selection and insertion.
-	*/
-	function FormulaEditor(args) {
-	var _self = this;
-	var _editor = new Slick.Editors.Text(args);
-	var _selector;
-
-	$.extend(this, _editor);
-
-	function init() {
-	  // register a plugin to select a range and append it to the textbox
-	  // since events are fired in reverse order (most recently added are executed first),
-	  // this will override other plugins like moverows or selection model and will
-	  // not require the grid to not be in the edit mode
-	  _selector = new Slick.CellRangeSelector();
-	  _selector.onCellRangeSelected.subscribe(_self.handleCellRangeSelected);
-	  args.grid.registerPlugin(_selector);
-	}
-
-	this.destroy = function () {
-	  _selector.onCellRangeSelected.unsubscribe(_self.handleCellRangeSelected);
-	  grid.unregisterPlugin(_selector);
-	  _editor.destroy();
+	var options = {
+	  editable: true,
+	  enableAddRow: true,
+	  enableCellNavigation: true,
+	  forceFitColumns: true,
+	  autoEdit: false
 	};
 
-	this.handleCellRangeSelected = function (e, args) {
-	  _editor.setValue(
-	      _editor.getValue() +
-	          grid.getColumns()[args.range.fromCell].name +
-	          args.range.fromRow +
-	          ":" +
-	          grid.getColumns()[args.range.toCell].name +
-	          args.range.toRow
-	  );
-	};
-
-
-	init();
+	function requiredFieldValidator(value) {
+	  if (value == null || value == undefined || !value.length) {
+	    return {valid: false, msg: "This is a required field"};
+	  } else {
+	    return {valid: true, msg: null};
+	  }
 	}
-
 
 	$(function () {
-	for (var i = 0; i < 100; i++) {
-	  var d = (data[i] = {});
-	  d["num"] = i;
-	}
+	  data = [
+	    { name: "Make a list", complete: true},
+	    { name: "Check it twice", complete: false},
+	    { name: "Find out who's naughty", complete: false},
+	    { name: "Find out who's nice", complete: false}
+	  ];
 
-	grid = new Slick.Grid("#myGrid", data, columns, options);
+	  grid = new Slick.Grid("#myGrid", data, columns, options);
 
-	grid.setSelectionModel(new Slick.CellSelectionModel());
-	grid.registerPlugin(new Slick.AutoTooltips());
+	  grid.setSelectionModel(new Slick.RowSelectionModel());
 
-	// set keyboard focus on the grid
-	grid.getCanvasNode().focus();
+	  var moveRowsPlugin = new Slick.RowMoveManager({
+	    cancelEditOnDrag: true
+	  });
 
-	var copyManager = new Slick.CellCopyManager();
-	grid.registerPlugin(copyManager);
-
-	copyManager.onPasteCells.subscribe(function (e, args) {
-	  if (args.from.length !== 1 || args.to.length !== 1) {
-	    throw "This implementation only supports single range copy and paste operations";
-	  }
-
-	  var from = args.from[0];
-	  var to = args.to[0];
-	  var val;
-	  for (var i = 0; i <= from.toRow - from.fromRow; i++) {
-	    for (var j = 0; j <= from.toCell - from.fromCell; j++) {
-	      if (i <= to.toRow - to.fromRow && j <= to.toCell - to.fromCell) {
-	        val = data[from.fromRow + i][columns[from.fromCell + j].field];
-	        data[to.fromRow + i][columns[to.fromCell + j].field] = val;
-	        grid.invalidateRow(to.fromRow + i);
+	  moveRowsPlugin.onBeforeMoveRows.subscribe(function (e, data) {
+	    for (var i = 0; i < data.rows.length; i++) {
+	      // no point in moving before or after itself
+	      if (data.rows[i] == data.insertBefore || data.rows[i] == data.insertBefore - 1) {
+	        e.stopPropagation();
+	        return false;
 	      }
 	    }
-	  }
-	  grid.render();
-	});
+	    return true;
+	  });
 
-	grid.onAddNewRow.subscribe(function (e, args) {
-	  var item = args.item;
-	  var column = args.column;
-	  grid.invalidateRow(data.length);
-	  data.push(item);
-	  grid.updateRowCount();
-	  grid.render();
-	});
+	  moveRowsPlugin.onMoveRows.subscribe(function (e, args) {
+	    var extractedRows = [], left, right;
+	    var rows = args.rows;
+	    var insertBefore = args.insertBefore;
+	    left = data.slice(0, insertBefore);
+	    right = data.slice(insertBefore, data.length);
+
+	    rows.sort(function(a,b) { return a-b; });
+
+	    for (var i = 0; i < rows.length; i++) {
+	      extractedRows.push(data[rows[i]]);
+	    }
+
+	    rows.reverse();
+
+	    for (var i = 0; i < rows.length; i++) {
+	      var row = rows[i];
+	      if (row < insertBefore) {
+	        left.splice(row, 1);
+	      } else {
+	        right.splice(row - insertBefore, 1);
+	      }
+	    }
+
+	    data = left.concat(extractedRows.concat(right));
+
+	    var selectedRows = [];
+	    for (var i = 0; i < rows.length; i++)
+	      selectedRows.push(left.length + i);
+
+	    grid.resetActiveCell();
+	    grid.setData(data);
+	    grid.setSelectedRows(selectedRows);
+	    grid.render();
+	  });
+
+	  grid.registerPlugin(moveRowsPlugin);
+
+	  grid.onDragInit.subscribe(function (e, dd) {
+	    // prevent the grid from cancelling drag'n'drop by default
+	    e.stopImmediatePropagation();
+	  });
+
+	  grid.onDragStart.subscribe(function (e, dd) {
+	    var cell = grid.getCellFromEvent(e);
+	    if (!cell) {
+	      return;
+	    }
+
+	    dd.row = cell.row;
+	    if (!data[dd.row]) {
+	      return;
+	    }
+
+	    if (Slick.GlobalEditorLock.isActive()) {
+	      return;
+	    }
+
+	    e.stopImmediatePropagation();
+	    dd.mode = "recycle";
+
+	    var selectedRows = grid.getSelectedRows();
+
+	    if (!selectedRows.length || $.inArray(dd.row, selectedRows) == -1) {
+	      selectedRows = [dd.row];
+	      grid.setSelectedRows(selectedRows);
+	    }
+
+	    dd.rows = selectedRows;
+	    dd.count = selectedRows.length;
+
+	    var proxy = $("<span></span>")
+	        .css({
+	          position: "absolute",
+	          display: "inline-block",
+	          padding: "4px 10px",
+	          background: "#e0e0e0",
+	          border: "1px solid gray",
+	          "z-index": 99999,
+	          "-moz-border-radius": "8px",
+	          "-moz-box-shadow": "2px 2px 6px silver"
+	        })
+	        .text("Drag to Recycle Bin to delete " + dd.count + " selected row(s)")
+	        .appendTo("body");
+
+	    dd.helper = proxy;
+
+	    $(dd.available).css("background", "pink");
+
+	    return proxy;
+	  });
+
+	  grid.onDrag.subscribe(function (e, dd) {
+	    if (dd.mode != "recycle") {
+	      return;
+	    }
+	    dd.helper.css({top: e.pageY + 5, left: e.pageX + 5});
+	  });
+
+	  grid.onDragEnd.subscribe(function (e, dd) {
+	    if (dd.mode != "recycle") {
+	      return;
+	    }
+	    dd.helper.remove();
+	    $(dd.available).css("background", "beige");
+	  });
+
+	  $.drop({mode: "mouse"});
+	  $("#dropzone")
+	      .bind("dropstart", function (e, dd) {
+	        if (dd.mode != "recycle") {
+	          return;
+	        }
+	        $(this).css("background", "yellow");
+	      })
+	      .bind("dropend", function (e, dd) {
+	        if (dd.mode != "recycle") {
+	          return;
+	        }
+	        $(dd.available).css("background", "pink");
+	      })
+	      .bind("drop", function (e, dd) {
+	        if (dd.mode != "recycle") {
+	          return;
+	        }
+	        var rowsToDelete = dd.rows.sort().reverse();
+	        for (var i = 0; i < rowsToDelete.length; i++) {
+	          data.splice(rowsToDelete[i], 1);
+	        }
+	        grid.invalidate();
+	        grid.setSelectedRows([]);
+	      });
+
+
+	  grid.onAddNewRow.subscribe(function (e, args) {
+	    var item = {name: "New task", complete: false};
+	    $.extend(item, args.item);
+	    data.push(item);
+	    grid.invalidateRows([data.length - 1]);
+	    grid.updateRowCount();
+	    grid.render();
+	  });
 	})
 	</script>
 	<style>
-    .slick-cell-checkboxsel {
-      background: #f0f0f0;
+     .cell-effort-driven {
+      text-align: center;
+    }
+
+    .cell-reorder {
+      cursor: move;
+      background: url("assets/grid/images/drag-handle.png") no-repeat center center;
+    }
+
+    .cell-selection {
       border-right-color: silver;
       border-right-style: solid;
+      background: #f5f5f5;
+      color: gray;
+      text-align: right;
+      font-size: 10px;
+    }
+
+    .slick-row.selected .cell-selection {
+      background-color: transparent; /* show default selected row background */
+    }
+
+    .bold {
+      font-weight: bold;
     }
   </style>
 </body>

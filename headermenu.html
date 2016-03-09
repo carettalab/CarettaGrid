@@ -184,151 +184,144 @@
 		<div class="grid-area col-md-9">
 			<h4>Overview</h4>
 			<div id="myGrid" style="width:100%;height:500px;"></div>
+			<h5>Search:</h5>
+			<p>Show tasks with % at least:
+				<div style="padding:2px;">
+			    	<div style="width:100px;display:inline-block;" id="pcSlider"></div>
+			    </div>
+			</p>
+			<p>And title including:<br>
+				<input type=text id="txtSearch" style="width:200px;">
+			</p>
 			<h5>Demonstrates</h5>
-			<p>Virtual scrolling on both rows and columns. Select a range of cells with a mouse. Use Ctrl-C and Ctrl-V keyboard shortcuts to cut and paste cells. Use Esc to cancel a copy and paste operation. Edit the cell and select a cell range to paste the range</p>
+			<p>This example demonstrates using the <b>Slick.Plugins.HeaderMenu</b> plugin to add drop-down menus to column headers.  (Hover over the headers.)</p>
 		</div>
 	</div>
 	<script src="assets/grid/js/firebugx.js"></script>
 	<link rel="stylesheet" href="assets/grid/css/slick.grid.css" type="text/css"/>
 	<link rel="stylesheet" type="text/css" href="assets/grid/css/examples.css">
   	<link rel="stylesheet" href="assets/grid/css/jquery-ui-1.8.16.custom.css" type="text/css"/>
-	<script src="assets/grid/js/jquery.event.drag-2.2.js"></script>
+
 	<script src="assets/grid/js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script src="assets/grid/js/jquery.event.drag-2.2.js"></script>
 
 	<script src="assets/grid/js/slick.core.js"></script>
-	<script src="assets/grid/js/slick.autotooltips.js"></script>
-	<script src="assets/grid/js/slick.cellrangedecorator.js"></script>
-	<script src="assets/grid/js/slick.cellrangeselector.js"></script>
-	<script src="assets/grid/js/slick.cellcopymanager.js"></script>
-	<script src="assets/grid/js/slick.cellselectionmodel.js"></script>
-	<script src="assets/grid/js/slick.editors.js"></script>
 	<script src="assets/grid/js/slick.grid.js"></script>
+	<script src="assets/grid/js/slick.headermenu.js"></script>
+
 
 	<script>
 	var grid;
-	var data = [];
-	var options = {
-	editable: true,
-	enableAddRow: true,
-	enableCellNavigation: true,
-	asyncEditorLoading: false,
-	autoEdit: false
-	};
-
 	var columns = [
-	{
-	  id: "selector",
-	  name: "",
-	  field: "num",
-	  width: 30
-	}
+		{id: "title", name: "Title", field: "title"},
+		{id: "duration", name: "Duration", field: "duration"},
+		{id: "%", name: "% Complete", field: "percentComplete"},
+		{id: "start", name: "Start", field: "start"},
+		{id: "finish", name: "Finish", field: "finish"},
+		{id: "effort-driven", name: "Effort Driven", field: "effortDriven"}
 	];
 
-	for (var i = 0; i < 100; i++) {
-	columns.push({
-	  id: i,
-	  name: String.fromCharCode("A".charCodeAt(0) + (i / 26) | 0) +
-	        String.fromCharCode("A".charCodeAt(0) + (i % 26)),
-	  field: i,
-	  width: 60,
-	  editor: FormulaEditor
-	});
-	}
-
-	/***
-	* A proof-of-concept cell editor with Excel-like range selection and insertion.
-	*/
-	function FormulaEditor(args) {
-	var _self = this;
-	var _editor = new Slick.Editors.Text(args);
-	var _selector;
-
-	$.extend(this, _editor);
-
-	function init() {
-	  // register a plugin to select a range and append it to the textbox
-	  // since events are fired in reverse order (most recently added are executed first),
-	  // this will override other plugins like moverows or selection model and will
-	  // not require the grid to not be in the edit mode
-	  _selector = new Slick.CellRangeSelector();
-	  _selector.onCellRangeSelected.subscribe(_self.handleCellRangeSelected);
-	  args.grid.registerPlugin(_selector);
-	}
-
-	this.destroy = function () {
-	  _selector.onCellRangeSelected.unsubscribe(_self.handleCellRangeSelected);
-	  grid.unregisterPlugin(_selector);
-	  _editor.destroy();
+	for (var i = 0; i < columns.length; i++) {
+	columns[i].header = {
+	  menu: {
+	    items: [
+	      {
+	        iconImage: "../images/sort-asc.gif",
+	        title: "Sort Ascending",
+	        command: "sort-asc"
+	      },
+	      {
+	        iconImage: "../images/sort-desc.gif",
+	        title: "Sort Descending",
+	        command: "sort-desc"
+	      },
+	      {
+	        title: "Hide Column",
+	        command: "hide",
+	        disabled: true,
+	        tooltip: "Can't hide this column"
+	      },
+	      {
+	        iconCssClass: "icon-help",
+	        title: "Help",
+	        command: "help"
+	      }
+	    ]
+	  }
 	};
-
-	this.handleCellRangeSelected = function (e, args) {
-	  _editor.setValue(
-	      _editor.getValue() +
-	          grid.getColumns()[args.range.fromCell].name +
-	          args.range.fromRow +
-	          ":" +
-	          grid.getColumns()[args.range.toCell].name +
-	          args.range.toRow
-	  );
-	};
-
-
-	init();
 	}
 
+
+	var options = {
+	enableColumnReorder: false
+	};
 
 	$(function () {
-	for (var i = 0; i < 100; i++) {
-	  var d = (data[i] = {});
-	  d["num"] = i;
+	var data = [];
+	for (var i = 0; i < 500; i++) {
+	  data[i] = {
+	    title: "Task " + i,
+	    duration: "5 days",
+	    percentComplete: Math.round(Math.random() * 100),
+	    start: "01/01/2009",
+	    finish: "01/05/2009",
+	    effortDriven: (i % 5 == 0)
+	  };
 	}
 
 	grid = new Slick.Grid("#myGrid", data, columns, options);
 
-	grid.setSelectionModel(new Slick.CellSelectionModel());
-	grid.registerPlugin(new Slick.AutoTooltips());
+	var headerMenuPlugin = new Slick.Plugins.HeaderMenu({});
 
-	// set keyboard focus on the grid
-	grid.getCanvasNode().focus();
+	headerMenuPlugin.onBeforeMenuShow.subscribe(function(e, args) {
+	  var menu = args.menu;
 
-	var copyManager = new Slick.CellCopyManager();
-	grid.registerPlugin(copyManager);
-
-	copyManager.onPasteCells.subscribe(function (e, args) {
-	  if (args.from.length !== 1 || args.to.length !== 1) {
-	    throw "This implementation only supports single range copy and paste operations";
-	  }
-
-	  var from = args.from[0];
-	  var to = args.to[0];
-	  var val;
-	  for (var i = 0; i <= from.toRow - from.fromRow; i++) {
-	    for (var j = 0; j <= from.toCell - from.fromCell; j++) {
-	      if (i <= to.toRow - to.fromRow && j <= to.toCell - to.fromCell) {
-	        val = data[from.fromRow + i][columns[from.fromCell + j].field];
-	        data[to.fromRow + i][columns[to.fromCell + j].field] = val;
-	        grid.invalidateRow(to.fromRow + i);
-	      }
-	    }
-	  }
-	  grid.render();
+	  // We can add or modify the menu here, or cancel it by returning false.
+	  var i = menu.items.length;
+	  menu.items.push({
+	    title: "Menu item " + i,
+	    command: "item" + i
+	  });
 	});
 
-	grid.onAddNewRow.subscribe(function (e, args) {
-	  var item = args.item;
-	  var column = args.column;
-	  grid.invalidateRow(data.length);
-	  data.push(item);
-	  grid.updateRowCount();
-	  grid.render();
+	headerMenuPlugin.onCommand.subscribe(function(e, args) {
+	  alert("Command: " + args.command);
 	});
+
+	grid.registerPlugin(headerMenuPlugin);
+
 	})
 	</script>
 	<style>
-    .slick-cell-checkboxsel {
+    .slick-header-menu {
+      border: 1px solid #718BB7;
       background: #f0f0f0;
-      border-right-color: silver;
-      border-right-style: solid;
+      padding: 2px;
+      -moz-box-shadow: 2px 2px 2px silver;
+      -webkit-box-shadow: 2px 2px 2px silver;
+      min-width: 100px;
+      z-index: 20;
+    }
+
+
+    .slick-header-menuitem {
+      padding: 2px 4px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+    }
+
+    .slick-header-menuitem:hover {
+      border-color: silver;
+      background: white;
+    }
+
+    .slick-header-menuitem-disabled {
+      border-color: transparent !important;
+      background: inherit !important;
+    }
+
+    .icon-help {
+      background-image: url(assets/grid/images/help.png);
     }
   </style>
 </body>
