@@ -181,7 +181,62 @@
 				</ul>
 			</nav>
 		</div>
-		<div class="grid-area col-md-9">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Neque illum adipisci quas officia quasi et magnam odit veritatis maiores dolorum eaque consequatur labore quae, doloribus, atque similique rem, blanditiis ullam. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Neque illum adipisci quas officia quasi et magnam odit veritatis maiores dolorum eaque consequatur labore quae, doloribus, atque similique rem, blanditiis ullam. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Neque illum adipisci quas officia quasi et magnam odit veritatis maiores dolorum eaque consequatur labore quae, doloribus, atque similique rem, blanditiis ullam.Lorem ipsum dolor sit amet, consectetur adipisicing elit. Neque illum adipisci quas officia quasi et magnam odit veritatis maiores dolorum eaque consequatur labore quae, doloribus, atque similique rem, blanditiis ullam. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Neque illum adipisci quas officia quasi et magnam odit veritatis maiores dolorum eaque consequatur labore quae, doloribus, atque similique rem, blanditiis ullam.</div>
+		<div class="grid-area col-md-9">
+			<h4>Overview</h4>
+			<div id="myGrid" style="width:100%;height: 500px;float: left;"></div>
+			<h5>Performance Speed</h5>
+			<p><b>Lorem ipsum dolor sit</b> amet, consectetur adipisicing elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident.</p>
+			<h5>Performance Speed Test</h5>
+			<p>Nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, <b>voluptate sequi quaerat aperiam explicabo enim perspiciatis provident.</b> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident. Lorem ipsum dolor sit amet, consectetur adipisicin. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam  non g elit. Ullam  non nobis magnam, deleniti asperiores odio a, eum saepe eaque pellat libero nemo, voluptate sequi quaerat aperiam explicabo enim perspiciatis provident.</p>
+		</div>
 	</div>
+	<link rel="stylesheet" href="assets/grid/css/slick.grid.css" type="text/css"/>
+  	<link rel="stylesheet" href="assets/grid/css/jquery-ui-1.8.16.custom.css" type="text/css"/>
+	<script src="assets/grid/js/jquery.event.drag-2.2.js"></script>
+	<script src="assets/grid/js/slick.core.js"></script>
+	<script src="assets/grid/js/slick.grid.js"></script>
+
+	<script>
+
+	var linkFormatter = function ( row, cell, value, columnDef, dataContext ) {
+        return '<a class="open-more-info">More Info</a>';
+    }
+
+	  var grid;
+	  var columns = [
+	    {id: "title", name: "Title", field: "title"},
+	    {id: "duration", name: "Duration", field: "duration"},
+	    {id: "%", name: "% Complete", field: "percentComplete"},
+	    {id: "start", name: "Start", field: "start"},
+	    {id: "finish", name: "Finish", field: "finish"},
+	    {id: "effort-driven", name: "Effort Driven", field: "effortDriven"},
+	    {id: "link", name: "More Info", field: "link", formatter:linkFormatter}
+	  ];
+
+	  var options = {
+	    enableCellNavigation: true,
+	    enableColumnReorder: false
+	  };
+
+	  $(function () {
+	    var data = [];
+	    for (var i = 0; i < 500; i++) {
+	      data[i] = {
+	        title: "Task " + i,
+	        duration: "5 days",
+	        percentComplete: Math.round(Math.random() * 100),
+	        start: "01/01/2009",
+	        finish: "01/05/2009",
+	        effortDriven: (i % 5 == 0)
+
+	         };
+	    }
+
+	    grid = new Slick.Grid("#myGrid", data, columns, options);
+	  })
+	  $(document).ready(function(){
+
+	  });
+	</script>
 </body>
 </html>
